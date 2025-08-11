@@ -15,8 +15,8 @@ const PIN = '0301'
 let useProxy = true // true để bật proxy, false tắt proxy
 const proxyConfig = {
   protocol: 'socks5', // socks5 hoặc http
-  host: '157.66.81.111',
-  port: 1080,
+  host: '152.53.194.46',
+  port: 8053,
   username: '', // nếu proxy cần user/pass thì điền, không thì để ''
   password: ''
 }
