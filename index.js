@@ -19,7 +19,7 @@ function createBot() {
   bot = mineflayer.createBot({
     host: '2y2c.org',
     username: 'nahiwinhaha',
-    version: '1.12.2'
+    version: '1.20.4'
   })
 
   bot.on('spawn', () => {
