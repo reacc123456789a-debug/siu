@@ -12,10 +12,10 @@ const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/137639124257695756
 const PIN = '0301'
 
 // === Cấu hình proxy ===
-let useProxy = false // true để bật proxy, false tắt proxy
+let useProxy = true // true để bật proxy, false tắt proxy
 const proxyConfig = {
   protocol: 'socks5', // socks5 hoặc http
-  host: '127.0.0.1',
+  host: '157.66.81.111',
   port: 1080,
   username: '', // nếu proxy cần user/pass thì điền, không thì để ''
   password: ''
