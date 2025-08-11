@@ -1,10 +1,9 @@
-// ✅ File đã gộp đầy đủ tính năng: giao diện web, Telegram/Discord, spam chat, điều khiển bot (KHÔNG proxy)
-
 const mineflayer = require('mineflayer')
 const express = require('express')
 const fetch = require('node-fetch')
 const os = require('os')
 const { execSync } = require('child_process')
+const ProxyAgent = require('proxy-agent')
 
 const TELEGRAM_BOT_TOKEN = '8184857901:AAGHLGeX5VUgRouxsmIXBPDV6Zl5KPqarkw'
 const CHAT_ID = '6790410023'
@@ -12,15 +11,44 @@ const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1376391242576957562/2cmM6ySlCSlbSvYMIn_jVQ6zZLGH6OLx5LLhuzDNh4mxFdHNQSqgRnKcaNvilZ-m8HSe'
 const PIN = '0301'
 
+// === Cấu hình proxy ===
+let useProxy = false // true để bật proxy, false tắt proxy
+const proxyConfig = {
+  protocol: 'socks5', // socks5 hoặc http
+  host: '127.0.0.1',
+  port: 1080,
+  username: '', // nếu proxy cần user/pass thì điền, không thì để ''
+  password: ''
+}
+
 let bot, botActive = true, spamEnabled = false, spamInterval
 let lastUpdateId = 0, chatBuffer = [], lastLogs = []
 
+function getProxyUrl() {
+  if (!useProxy) return null
+  const auth = proxyConfig.username && proxyConfig.password
+    ? `${proxyConfig.username}:${proxyConfig.password}@`
+    : ''
+  return `${proxyConfig.protocol}://${auth}${proxyConfig.host}:${proxyConfig.port}`
+}
+
 function createBot() {
-  bot = mineflayer.createBot({
+  const options = {
     host: '2y2c.org',
     username: 'nahiwinhaha',
     version: '1.20.4'
-  })
+  }
+  if (useProxy) {
+    const proxyUrl = getProxyUrl()
+    if (proxyUrl) {
+      options.agent = new ProxyAgent(proxyUrl)
+      console.log('🌐 Đang sử dụng proxy:', proxyUrl)
+    }
+  } else {
+    console.log('🌐 Không sử dụng proxy')
+  }
+
+  bot = mineflayer.createBot(options)
 
   bot.on('spawn', () => {
     const loginInterval = setInterval(() => {
@@ -145,11 +173,16 @@ app.get('/', (req, res) => {
     ul { list-style: none; padding: 0 }
     li { padding: 2px 0; }
     .panel { background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; display: inline-block; }
+    .proxy-info { margin: 10px 0; font-weight: bold; color: #0ff; }
   </style></head><body>
   <div class="panel">
     <h1>🚀 Điều khiển Bot Minecraft</h1>
     <h3>🧑‍🤝‍🧑 Người chơi online:</h3>
     <ul id="players">${players}</ul>
+
+    <div class="proxy-info">Proxy: ${useProxy ? getProxyUrl() : '<span style="color:red;">Tắt</span>'}</div>
+    <form action="/toggleProxy" method="GET"><button>${useProxy ? '⛔ Tắt Proxy' : '✅ Bật Proxy'}</button></form>
+
     <form action="/chat"><input name="msg" placeholder="💬 Tin nhắn"/><button>Gửi</button></form><br>
     <form action="/toggleSpam"><button>${spamEnabled ? '⛔ Tắt spam' : '✅ Bật spam'}</button></form><br>
     <form action="/disconnect"><button>❌ Ngắt bot</button></form><br>
@@ -163,6 +196,20 @@ app.get('/', (req, res) => {
       })
     }, 10000)
   </script></body></html>`)
+})
+
+app.get('/toggleProxy', (req, res) => {
+  useProxy = !useProxy
+  if (bot) {
+    bot.quit()
+    botActive = false
+  }
+  // Tạo lại bot sau 3s với trạng thái proxy mới
+  setTimeout(() => {
+    botActive = true
+    createBot()
+  }, 3000)
+  res.redirect('/?pin=' + PIN)
 })
 
 app.get('/tablist', (req, res) => {
